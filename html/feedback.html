@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="../style.css">
+    <link rel="shortcut icon" href="../images/Logoo.svg" type="image/x-icon">
+    <title>DiveSea / Wallet</title>
+
+    <script src="../js/wow.min.js"></script>
+    <script>
+        new WOW().init();
+    </script>
+</head>
+
+<body>
+    <div class="feedback-container">
+        <section class="feedback-section">
+
+            <div class="feedback-panel">
+                <a href="../index.html">
+                    <img src="../images/Nav-Logo.svg" alt="Logo" id="Logo">
+                </a>
+
+                <main>
+                    <h3>Связаться с нами</h3>
+                    <br>
+
+                    <form id="feedback-form" class="form-block" novalidate>
+
+                        <label>
+                            <p>Ваше имя *</p>
+                            <input type="text" name="name" required minlength="2" placeholder="Введите имя">
+                        </label>
+
+                        <label>
+                            <p>Email *</p>
+                            <input type="email" name="email" required placeholder="example@mail.com">
+                        </label>
+
+                        <label>
+                            <p>Телефон</p>
+                            <input type="tel" name="phone" placeholder="+375 (__) ___‑__‑__">
+                        </label>
+
+                        <label>
+                            <p>Сообщение *</p>
+                            <textarea name="message" required minlength="5"
+                                placeholder="Ваш вопрос или запрос на экскурсию"></textarea>
+                        </label>
+
+                        <button type="submit" class="form-submit">Отправить</button>
+
+                    </form>
+                </main>
+            </div>
+
+            <div class="feedback-info">
+                <h3>Мы всегда на связи</h3>
+                <br>
+                <p>Задайте вопрос, уточните детали экскурсии или оставьте заявку — мы ответим вам в ближайшее время.</p>
+            </div>
+
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("feedback-form");
+            const fields = form.querySelectorAll("input, textarea");
+
+            // ============================
+            // МАСКА ТЕЛЕФОНА
+            // ============================
+            const phoneField = document.querySelector("input[name='phone']");
+
+            phoneField.addEventListener("input", onPhoneInput);
+            phoneField.addEventListener("focus", onPhoneFocus);
+            phoneField.addEventListener("blur", onPhoneBlur);
+
+            function onPhoneInput(e) {
+                let value = e.target.value.replace(/\D/g, ""); // только цифры
+
+                // Начинаем всегда с 375
+                if (!value.startsWith("375")) {
+                    value = "375" + value;
+                }
+
+                // Ограничиваем длину
+                value = value.slice(0, 12);
+
+                let formatted = "+375 ";
+
+                if (value.length > 3) {
+                    formatted += "(" + value.slice(3, 5);
+                } else {
+                    formatted += "(";
+                }
+
+                if (value.length >= 5) {
+                    formatted += ") ";
+                }
+
+                if (value.length >= 5) {
+                    formatted += value.slice(5, 8);
+                }
+
+                if (value.length >= 8) {
+                    formatted += "-" + value.slice(8, 10);
+                }
+
+                if (value.length >= 10) {
+                    formatted += "-" + value.slice(10, 12);
+                }
+
+                e.target.value = formatted;
+            }
+
+            function onPhoneFocus(e) {
+                if (e.target.value === "") {
+                    e.target.value = "+375 (";
+                }
+            }
+
+            function onPhoneBlur(e) {
+                if (e.target.value === "+375 (" || e.target.value === "+375 ()") {
+                    e.target.value = "";
+                }
+            }
+
+            // ============================
+            // СОЗДАНИЕ КОНТЕЙНЕРОВ ОШИБОК
+            // ============================
+            fields.forEach(field => {
+                const error = document.createElement("div");
+                error.className = "input-error";
+                error.style.color = "#d9534f";
+                error.style.fontSize = "14px";
+                error.style.marginTop = "4px";
+                error.style.display = "none";
+                field.parentNode.appendChild(error);
+
+                field.addEventListener("input", () => {
+                    error.style.display = "none";
+                });
+            });
+
+            // ============================
+            // ВАЛИДАЦИЯ
+            // ============================
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phonePattern = /^\+375\s?\((25|29|33|44)\)\s?\d{3}-\d{2}-\d{2}$/;
+
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+
+                let valid = true;
+
+                const nameField = form.name;
+                const emailField = form.email;
+                const messageField = form.message;
+
+                // Имя
+                if (nameField.value.trim().length < 2) {
+                    showError(nameField, "Имя должно содержать минимум 2 символа.");
+                    valid = false;
+                }
+
+                // Email
+                if (!emailPattern.test(emailField.value.trim())) {
+                    showError(emailField, "Введите корректный email (например: example@mail.com).");
+                    valid = false;
+                }
+
+                // Телефон (обязательный)
+                if (!phonePattern.test(phoneField.value.trim())) {
+                    showError(phoneField, "Введите номер в формате: +375 (29) 123-45-67");
+                    valid = false;
+                }
+
+                // Сообщение
+                if (messageField.value.trim().length < 5) {
+                    showError(messageField, "Сообщение должно содержать минимум 5 символов.");
+                    valid = false;
+                }
+
+                if (!valid) return;
+
+                // ============================
+                // ОТПРАВКА В TELEGRAM
+                // ============================
+                const token = "8475014397:AAGob42RaxqJkhgPXu4vP3254ioHJd7565g";
+                const chat_id = "7789506191";
+
+                const text =
+                    "📩 Новая заявка с сайта\n\n" +
+                    "👤 Имя: " + nameField.value + "\n" +
+                    "📧 Email: " + emailField.value + "\n" +
+                    "📱 Телефон: " + phoneField.value + "\n" +
+                    "💬 Сообщение:\n" + messageField.value;
+
+                fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: chat_id,
+                        text: text
+                    })
+                })
+                    .then(() => {
+                        alert("Сообщение отправлено! Мы скоро свяжемся с вами.");
+                        form.reset();
+                    })
+                    .catch(() => {
+                        alert("Ошибка отправки. Попробуйте позже.");
+                    });
+            });
+
+            function showError(field, message) {
+                const error = field.parentNode.querySelector(".input-error");
+                error.textContent = message;
+                error.style.display = "block";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
